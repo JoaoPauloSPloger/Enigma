@@ -1,0 +1,175 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Máquina Enigma Galáctica</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="enigma.js" defer></script>
+  <style>
+    body {
+      background: linear-gradient(to bottom, #0a0a23, #1a1a3b);
+      color: #e0e0ff;
+      font-family: 'Arial', sans-serif;
+    }
+    .neon {
+      text-shadow: 0 0 5px #00ffcc, 0 0 10px #00ffcc, 0 0 20px #00ffcc;
+    }
+    .rotor {
+      background: #1a1a3b;
+      border: 2px solid #00ffcc;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+    }
+    .rotor:hover {
+      transform: scale(1.05);
+      transition: transform 0.2s;
+    }
+    button {
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 10px #00ffcc;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+  <h1 class="text-4xl font-bold neon mb-8">Máquina Enigma Galáctica</h1>
+  
+  <!-- Rotores -->
+  <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8">
+    <div class="rotor" id="rotor1">
+      <p class="font-bold">R1</p>
+      <p id="rotor1-value" class="text-2xl">0</p>
+      <button onclick="incrementRotor(1)" class="bg-blue-600 text-white px-2 py-1 rounded">▲</button>
+      <button onclick="decrementRotor(1)" class="bg-blue-600 text-white px-2 py-1 rounded">▼</button>
+    </div>
+    <div class="rotor" id="rotor2">
+      <p class="font-bold">R2</p>
+      <p id="rotor2-value" class="text-2xl">0</p>
+      <button onclick="incrementRotor(2)" class="bg-blue-600 text-white px-2 py-1 rounded">▲</button>
+      <button onclick="decrementRotor(2)" class="bg-blue-600 text-white px-2 py-1 rounded">▼</button>
+    </div>
+    <div class="rotor" id="rotor3">
+      <p class="font-bold">R3</p>
+      <p id="rotor3-value" class="text-2xl">0</p>
+      <button onclick="incrementRotor(3)" class="bg-blue-600 text-white px-2 py-1 rounded">▲</button>
+      <button onclick="decrementRotor(3)" class="bg-blue-600 text-white px-2 py-1 rounded">▼</button>
+    </div>
+    <div class="rotor" id="rotor4">
+      <p class="font-bold">R4</p>
+      <p id="rotor4-value" class="text-2xl">0</p>
+      <button onclick="incrementRotor(4)" class="bg-blue-600 text-white px-2 py-1 rounded">▲</button>
+      <button onclick="decrementRotor(4)" class="bg-blue-600 text-white px-2 py-1 rounded">▼</button>
+    </div>
+    <div class="rotor" id="rotor5">
+      <p class="font-bold">R5</p>
+      <p id="rotor5-value" class="text-2xl">0</p>
+      <button onclick="incrementRotor(5)" class="bg-blue-600 text-white px-2 py-1 rounded">▲</button>
+      <button onclick="decrementRotor(5)" class="bg-blue-600 text-white px-2 py-1 rounded">▼</button>
+    </div>
+    <div class="rotor" id="rotor6">
+      <p class="font-bold">R6</p>
+      <p id="rotor6-value" class="text-2xl">0</p>
+      <button onclick="incrementRotor(6)" class="bg-blue-600 text-white px-2 py-1 rounded">▲</button>
+      <button onclick="decrementRotor(6)" class="bg-blue-600 text-white px-2 py-1 rounded">▼</button>
+    </div>
+    <div class="rotor" id="rotor7">
+      <p class="font-bold">R7</p>
+      <p id="rotor7-value" class="text-2xl">0</p>
+      <button onclick="incrementRotor(7)" class="bg-blue-600 text-white px-2 py-1 rounded">▲</button>
+      <button onclick="decrementRotor(7)" class="bg-blue-600 text-white px-2 py-1 rounded">▼</button>
+    </div>
+    <div class="rotor" id="rotor8">
+      <p class="font-bold">R8</p>
+      <p id="rotor8-value" class="text-2xl">0</p>
+      <button onclick="incrementRotor(8)" class="bg-blue-600 text-white px-2 py-1 rounded">▲</button>
+      <button onclick="decrementRotor(8)" class="bg-blue-600 text-white px-2 py-1 rounded">▼</button>
+    </div>
+    <div class="rotor" id="rotor9">
+      <p class="font-bold">R9</p>
+      <p id="rotor9-value" class="text-2xl">0</p>
+      <button onclick="incrementRotor(9)" class="bg-blue-600 text-white px-2 py-1 rounded">▲</button>
+      <button onclick="decrementRotor(9)" class="bg-blue-600 text-white px-2 py-1 rounded">▼</button>
+    </div>
+    <div class="rotor" id="rotor10">
+      <p class="font-bold">R10</p>
+      <p id="rotor10-value" class="text-2xl">0</p>
+      <button onclick="incrementRotor(10)" class="bg-blue-600 text-white px-2 py-1 rounded">▲</button>
+      <button onclick="decrementRotor(10)" class="bg-blue-600 text-white px-2 py-1 rounded">▼</button>
+    </div>
+  </div>
+
+  <!-- Campo de Texto -->
+  <div class="w-full max-w-md mb-8">
+    <label for="inputText" class="block text-lg neon mb-2">Texto:</label>
+    <textarea id="inputText" rows="4" class="w-full bg-gray-800 text-white p-4 rounded border border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+    <label for="outputText" class="block text-lg neon mt-4 mb-2">Resultado:</label>
+    <textarea id="outputText" rows="4" class="w-full bg-gray-800 text-white p-4 rounded border border-blue-500" readonly></textarea>
+  </div>
+
+  <!-- Seleção de Operação -->
+  <div class="w-full max-w-md mb-8">
+    <label for="operation" class="block text-lg neon mb-2">Operação:</label>
+    <select id="operation" class="w-full bg-gray-800 text-white p-2 rounded border border-blue-500">
+      <option value="superEnigma">Super ENIGMA</option>
+      <option value="somaSimples">Soma Simples</option>
+      <option value="somaQuadrados">Soma dos Quadrados</option>
+      <option value="somaCubos">Soma dos Cubos</option>
+      <option value="produtoRotores">Produto dos Rotores</option>
+      <option value="somaPonderada">Soma Ponderada</option>
+      <option value="exponenciacaoCombinada">Exponenciação Combinada</option>
+      <option value="multiplicacaoSoma">Multiplicação e Soma</option>
+    </select>
+  </div>
+
+  <!-- Botões de Ação -->
+  <div class="flex flex-wrap gap-4">
+    <button onclick="encrypt()" class="bg-green-600 text-white px-6 py-2 rounded">Criptografar</button>
+    <button onclick="decrypt()" class="bg-red-600 text-white px-6 py-2 rounded">Descriptografar</button>
+    <button onclick="copyText()" class="bg-yellow-600 text-white px-6 py-2 rounded">Copiar</button>
+    <button onclick="pasteText()" class="bg-purple-600 text-white px-6 py-2 rounded">Colar</button>
+  </div>
+</body>
+</html>
