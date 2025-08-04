@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang='pt-BR'>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; script-src-elem 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com;">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Máquina Enigma Avançada</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg1: #1a1a2e;
+      --bg2: #16213e;
+      --highlight: #e94560;
+      --highlight-dark: #d13354;
+      --text: #ffffff;
+      --text-muted: #aaaaaa;
+      --success: #4caf50;
+      --warning: #ff9800;
+      --border-radius: 8px;
+      --transition: all 0.3s ease;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, var(--bg1), var(--bg2));
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    
+    .container {
+      background: var(--bg2);
+      padding: 30px;
+      border-radius: var(--border-radius);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      max-width: 900px;
+      width: 100%;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: 2.2rem;
+      letter-spacing: 1.5px;
+      color: var(--highlight);
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    .section {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    
+    .text-area-container {
+      position: relative;
+      margin-bottom: 15px;
+    }
+    
+    .text-area-container label {
+      position: absolute;
+      top: -10px;
+      left: 12px;
+      background: var(--bg2);
+      padding: 0 6px;
+      font-size: 0.85rem;
+      z-index: 1;
+    }
+    
+    #inputText, #outputText {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--border-radius);
+      font-size: 1rem;
+      background: var(--bg1);
+      color: var(--text);
+      transition: var(--transition);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    #inputText {
+      min-height: 120px;
+      max-height: 200px;
+      resize: vertical;
+    }
+    
+    #inputText:focus, #outputText:focus {
+      outline: none;
+      border-color: var(--highlight);
+      box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.2);
+    }
+    
+    #outputText {
+      min-height: 120px;
+      max-height: 200px;
+      overflow-y: auto;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      background-color: rgba(26, 26, 46, 0.7);
+    }
+    
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 12px;
+      margin: 25px 0;
+    }
+    
+    .rotor {
+      background: var(--bg1);
+      padding: 12px;
+      border-radius: var(--border-radius);
+      text-align: center;
+      box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.3);
+      transition: var(--transition);
+    }
+    
+    .rotor:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .rotor label {
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+      color: var(--text);
+      font-weight: 700;
+    }
+    
+    .rotor-control {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .rotor-control .arrow {
+      background: var(--bg2);
+      border: none;
+      color: var(--text);
+      font-size: 1.2rem;
+      padding: 8px;
+      width: 100%;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .rotor-control .arrow:hover {
+      background: var(--highlight);
+      transform: scale(1.05);
+    }
+    
+    .rotor-control .arrow:active {
+      transform: scale(0.95);
+    }
+    
+    .rotor-control input {
+      width: 100%;
+      text-align: center;
+      margin: 8px 0;
+      padding: 8px;
+      border-radius: 4px;
+      background: var(--bg2);
+      color: var(--text);
+      border: 1px solid var(--highlight);
+      font-size: 1rem;
+      font-weight: bold;
+      transition: var(--transition);
+    }
+    
+    .rotor-control input:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(233, 69, 96, 0.3);
+    }
+    
+    select {
+      padding: 10px;
+      border: none;
+      border-radius: var(--border-radius);
+      background: var(--bg1);
+      color: var(--text);
+      font-size: 1rem;
+      text-align: center;
+      width: 100%;
+      cursor: pointer;
+      transition: var(--transition);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    select:focus {
+      outline: none;
+      border-color: var(--highlight);
+      box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.2);
+    }
+    
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    
+    .buttons button {
+      flex: 1 1 150px;
+      padding: 12px;
+      font-size: 1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      background: var(--highlight);
+      color: var(--text);
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-width: 120px;
+    }
+    
+    .buttons button:hover {
+      background: var(--highlight-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .buttons button:active {
+      transform: translateY(0);
+    }
+    
+    .buttons button.secondary {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .buttons button.secondary:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .settings-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .setting-group {
+      flex: 1;
+      min-width: 200px;
+    }
+    
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    
+    .checkbox-container input[type="checkbox"] {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--highlight);
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      transition: var(--transition);
+    }
+    
+    .checkbox-container input[type="checkbox"]:checked {
+      background: var(--highlight);
+    }
+    
+    .checkbox-container input[type="checkbox"]:checked::after {
+      content: '✓';
+      position: absolute;
+      color: white;
+      font-size: 12px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 15px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    
+    .notification {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--highlight);
+      color: white;
+      padding: 12px 20px;
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: var(--transition);
+      z-index: 1000;
+    }
+    
+    .notification.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 20px;
+      }
+      
+      .controls {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      }
+      
+      .rotor-control .arrow {
+        padding: 6px;
+      }
+      
+      h1 {
+        font-size: 1.8rem;
+      }
+    }
+    
+    
+    @keyframes rotorSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .rotor-spin {
+      animation: rotorSpin 0.5s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Máquina Enigma Avançada</h1>
+    
+    <div class="settings-row">
+      <div class="setting-group">
+        <label for="equationSelect">Algoritmo de Criptografia</label>
+        <select id="equationSelect">
+          <option value="super">Super ENIGMA</option>
+          <option value="simple">Soma Simples</option>
+          <option value="exponential">Soma dos Quadrados</option>
+          <option value="cubic">Soma dos Cubos</option>
+          <option value="product">Produto dos Rotores</option>
+          <option value="weighted">Soma Ponderada</option>
+          <option value="exp-combined">Exponenciação Combinada</option>
+          <option value="mult-sum">Multiplicação e Soma</option>
+        </select>
+      </div>
+      
+      <div class="setting-group">
+        <label>Opções</label>
+        <div class="checkbox-container">
+          <input type="checkbox" id="useGalactic">
+          <label for="useGalactic">Usar idioma galáctico</label>
+        </div>
+        <div class="checkbox-container">
+          <input type="checkbox" id="autoRotate">
+          <label for="autoRotate">Rotação sequencial</label>
+        </div>
+      </div>
+    </div>
+    
+    <div class="text-area-container">
+      <label for="inputText">Texto de Entrada</label>
+      <textarea id="inputText" placeholder="Digite o texto para criptografar ou descriptografar..."></textarea>
+    </div>
+    
+    <div class="controls">
+      <!-- Rotores 1-5 -->
+      <div class="rotor">
+        <label for="rotor1">Rotor 1</label>
+        <div class="rotor-control">
+          <button class="arrow up" data-idx="0" title="Aumentar valor">▲</button>
+          <input id="rotor1" type="text" value="0" maxlength="2">
+          <button class="arrow down" data-idx="0" title="Diminuir valor">▼</button>
+        </div>
+      </div>
+      <div class="rotor">
+        <label for="rotor2">Rotor 2</label>
+        <div class="rotor-control">
+          <button class="arrow up" data-idx="1" title="Aumentar valor">▲</button>
+          <input id="rotor2" type="text" value="0" maxlength="2">
+          <button class="arrow down" data-idx="1" title="Diminuir valor">▼</button>
+        </div>
+      </div>
+      <div class="rotor">
+        <label for="rotor3">Rotor 3</label>
+        <div class="rotor-control">
+          <button class="arrow up" data-idx="2" title="Aumentar valor">▲</button>
+          <input id="rotor3" type="text" value="0" maxlength="2">
+          <button class="arrow down" data-idx="2" title="Diminuir valor">▼</button>
+        </div>
+      </div>
+      <div class="rotor">
+        <label for="rotor4">Rotor 4</label>
+        <div class="rotor-control">
+          <button class="arrow up" data-idx="3" title="Aumentar valor">▲</button>
+          <input id="rotor4" type="text" value="0" maxlength="2">
+          <button class="arrow down" data-idx="3" title="Diminuir valor">▼</button>
+        </div>
+      </div>
+      <div class="rotor">
+        <label for="rotor5">Rotor 5</label>
+        <div class="rotor-control">
+          <button class="arrow up" data-idx="4" title="Aumentar valor">▲</button>
+          <input id="rotor5" type="text" value="0" maxlength="2">
+          <button class="arrow down" data-idx="4" title="Diminuir valor">▼</button>
+        </div>
+      </div>
+      <!-- Rotores 6-10 -->
+      <div class="rotor">
+        <label for="rotor6">Rotor 6</label>
+        <div class="rotor-control">
+          <button class="arrow up" data-idx="5" title="Aumentar valor">▲</button>
+          <input id="rotor6" type="text" value="0" maxlength="2">
+          <button class="arrow down" data-idx="5" title="Diminuir valor">▼</button>
+        </div>
+      </div>
+      <div class="rotor">
+        <label for="rotor7">Rotor 7</label>
+        <div class="rotor-control">
+          <button class="arrow up" data-idx="6" title="Aumentar valor">▲</button>
+          <input id="rotor7" type="text" value="0" maxlength="2">
+          <button class="arrow down" data-idx="6" title="Diminuir valor">▼</button>
+        </div>
+      </div>
+      <div class="rotor">
+        <label for="rotor8">Rotor 8</label>
+        <div class="rotor-control">
+          <button class="arrow up" data-idx="7" title="Aumentar valor">▲</button>
+          <input id="rotor8" type="text" value="0" maxlength="2">
+          <button class="arrow down" data-idx="7" title="Diminuir valor">▼</button>
+        </div>
+      </div>
+      <div class="rotor">
+        <label for="rotor9">Rotor 9</label>
+        <div class="rotor-control">
+          <button class="arrow up" data-idx="8" title="Aumentar valor">▲</button>
+          <input id="rotor9" type="text" value="0" maxlength="2">
+          <button class="arrow down" data-idx="8" title="Diminuir valor">▼</button>
+        </div>
+      </div>
+      <div class="rotor">
+        <label for="rotor10">Rotor 10</label>
+        <div class="rotor-control">
+          <button class="arrow up" data-idx="9" title="Aumentar valor">▲</button>
+          <input id="rotor10" type="text" value="0" maxlength="2">
+          <button class="arrow down" data-idx="9" title="Diminuir valor">▼</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="buttons">
+      <button id="encryptBtn" title="Criptografar o texto">
+        <span>🔒</span> Criptografar
+      </button>
+      <button id="decryptBtn" title="Descriptografar o texto">
+        <span>🔓</span> Descriptografar
+      </button>
+      <button id="randomizeBtn" class="secondary" title="Valores aleatórios para os rotores">
+        <span>🎲</span> Aleatório
+      </button>
+      <button id="resetBtn" class="secondary" title="Resetar todos os rotores">
+        <span>🔄</span> Resetar
+      </button>
+    </div>
+    
+    <div class="buttons">
+      <button id="copyBtn" class="secondary" title="Copiar texto de saída">
+        <span>📋</span> Copiar
+      </button>
+      <button id="pasteBtn" class="secondary" title="Colar texto para entrada">
+        <span>📎</span> Colar
+      </button>
+      <button id="clearBtn" class="secondary" title="Limpar todas as áreas de texto">
+        <span>🧹</span> Limpar
+      </button>
+    </div>
+    
+    <div class="text-area-container">
+      <label for="outputText">Resultado</label>
+      <div id="outputText" contenteditable="true" placeholder="Resultado aparecerá aqui..."></div>
+    </div>
+    
+    <div class="status-bar">
+      <div id="statusMessage">Pronto</div>
+      <div id="characterCount">0 caracteres</div>
+    </div>
+  </div>
+  
+  <div class="notification" id="notification"></div>
+  <script>
+    'use strict';
+    (function() {
+      // Constantes e configurações
+      const ALPHABET32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+      const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const DIGITS = '0123456789';
+      
+      // Mapeamento de caracteres galácticos
+      const CUSTOM = {
+        'A':'ᔑ', 'B':'ʖ', 'C':'ᓵ', 'D':'↸', 'E':'ᒷ', 'F':'⎓', 
+        'G':'⊣', 'H':'⍑', 'I':'╎', 'J':'⋮', 'K':'ꖌ', 'L':'ꖎ', 
+        'M':'ᒲ', 'N':'リ', 'O':'𝙹', 'P':'!¡', 'Q':'ᑑ', 'R':'∷', 
+        'S':'ᓭ', 'T':'ℸ̣', 'U':'⚍', 'V':'⍊', 'W':'∴', 'X':'̇/', 
+        'Y':'||', 'Z':'⨅'
+      };
+      
+      const REV = Object.fromEntries(Object.entries(CUSTOM).map(([k,v]) => [v,k]));
+      
+      // Elementos da interface
+      const rotorInputs = Array.from({length: 10}, (_, i) => document.getElementById(`rotor${i+1}`));
+      const equationSelect = document.getElementById('equationSelect');
+      const inputText = document.getElementById('inputText');
+      const outputText = document.getElementById('outputText');
+      const useGalactic = document.getElementById('useGalactic');
+      const autoRotate = document.getElementById('autoRotate');
+      const statusMessage = document.getElementById('statusMessage');
+      const characterCount = document.getElementById('characterCount');
+      const notification = document.getElementById('notification');
+
+      let initialOffsets = null;
+
+      // Funções utilitárias
+      function captureInitialOffsets() {
+        initialOffsets = rotorInputs.map(input => {
+          let v = parseInt(input.value, 10);
+          return isNaN(v) ? 0 : Math.min(Math.max(v, 0), 25);
+        });
+      }
+
+      function showNotification(message, duration = 3000) {
+        notification.textContent = message;
+        notification.classList.add('show');
+        setTimeout(() => {
+          notification.classList.remove('show');
+        }, duration);
+      }
+      
+      function updateStatus(message, isError = false) {
+        statusMessage.textContent = message;
+        statusMessage.style.color = isError ? 'var(--highlight)' : 'var(--text-muted)';
+      }
+      
+      function updateCharacterCount() {
+        const count = inputText.value.length;
+        characterCount.textContent = `${count} caractere${count !== 1 ? 's' : ''}`;
+      }
+      
+      // Funções de codificação Base32
+      //adicionar SHA256 
+      function base32Encode(bytes) {
+        let bits = 0, val = 0, out = '';
+        bytes.forEach(b => {
+          val = (val << 8) | b;
+          bits += 8;
+          while (bits >= 5) {
+            out += ALPHABET32[(val >> (bits - 5)) & 31];
+            bits -= 5;
+          }
+        });
+        if (bits > 0) {
+          out += ALPHABET32[(val << (5 - bits)) & 31];
+        }
+        return out;
+      }
+      function base32Decode(str) {
+        let bits = 0, val = 0, bytes = [];
+        str.replace(/=+/g, '').split('').forEach(ch => {
+          const idx = ALPHABET32.indexOf(ch.toUpperCase());
+          if (idx < 0) return;
+          val = (val << 5) | idx;
+          bits += 5;
+          if (bits >= 8) {
+            bytes.push((val >> (bits - 8)) & 0xFF);
+            bits -= 8;
+          }
+        });
+        return new Uint8Array(bytes);
+      }
+      
+      // Funções de tradução galáctica
+      function encCustom(s) {
+        return s.split('').map(c => CUSTOM[c.toUpperCase()] || c).join('');
+      }
+      
+      function decCustom(s) {
+        let r = '';
+        const glyphs = Object.values(CUSTOM).sort((a, b) => b.length - a.length);
+        while (s.length) {
+          const m = glyphs.find(g => s.startsWith(g));
+          if (m) {
+            r += REV[m];
+            s = s.slice(m.length);
+          } else {
+            r += s[0];
+            s = s.slice(1);
+          }
+        }
+        return r;
+      }
+      
+      // Funções da máquina Enigma
+      function getOffsets() {
+        // atualizar se SHA256 for implementado
+        return rotorInputs.map(input => {
+          let v = parseInt(input.value, 10);
+          return isNaN(v) ? 0 : Math.max(0, Math.min(25, v));
+        });
+      }
+      
+      function computeShift(offsets, mod, type) {
+        let shift = 0;
+        const [a, b, c, d, e, f, g, h, i, j] = offsets;
+        
+        switch (type) {
+          case 'simple':
+            shift = offsets.reduce((acc, curr) => acc + curr, 0);
+            break;
+            
+          case 'exponential':
+            shift = offsets.reduce((acc, curr) => acc + curr * curr, 0);
+            break;
+            
+          case 'cubic':
+            shift = offsets.reduce((acc, curr) => acc + curr * curr * curr, 0);
+            break;
+            
+          case 'product':
+            shift = offsets.reduce((acc, curr) => acc * (curr + 1), 1);
+            break;
+            
+          case 'weighted':
+            shift = offsets.reduce((acc, curr, idx) => acc + (idx + 1) * curr, 0);
+            break;
+            
+          case 'exp-combined': {
+            const sum = offsets.reduce((x, y) => x + y, 0);
+            const sumSq = offsets.reduce((x, y) => x + y * y, 0);
+            shift = sum * sum + sumSq;
+            break;
+          }
+            
+          case 'mult-sum':
+            shift = offsets.reduce((acc, curr, idx) => 
+              idx % 2 === 0 ? acc + curr * (offsets[idx + 1] || 1) : acc, 0);
+            break;
+            
+          case 'super':
+            const sum1 = offsets.reduce((x, y) => x + y, 0);
+            const sum2 = offsets.reduce((x, y) => x + y * y, 0);
+            const sum3 = offsets.reduce((x, y) => x + y * y * y, 0);
+            const prod = offsets.reduce((x, y) => x * (y + 1), 1);
+            const weighted = offsets.reduce((x, y, idx) => x + (idx + 1) * y, 0);
+            const expComb = sum1 * sum1 + sum2;
+            const multSum = offsets.reduce((x, y, idx) => 
+              idx % 2 === 0 ? x + y * (offsets[idx + 1] || 1) : x, 0);
+            
+            const sumTotal = sum1 + sum2 + sum3 + prod + weighted + expComb + multSum;
+            const prodTotal = sum1 * sum2 * sum3 * prod * weighted * expComb * multSum;
+            shift = (sumTotal * prodTotal) % mod;
+            break;
+        }
+        
+        return shift % mod;
+      }
+      
+      function stepRotors(offsets) {
+        offsets[0] = (offsets[0] + 1) % 26;
+        for (let i = 0; i < offsets.length - 1; i++) {
+          if (offsets[i] === 0) {
+            offsets[i + 1] = (offsets[i + 1] + 1) % 26;
+          } else {
+            break;
+          }
+        }
+      }
+      
+      function enigma(text, offsets, type, encrypt = true) {
+        const currentOffsets = offsets.slice();
+        let result = '';
+        
+        for (const char of text) {
+          if (/[A-Z0-9]/.test(char)) {
+            const mod = /[A-Z]/.test(char) ? 26 : 10;
+            const shift = computeShift(currentOffsets, mod, type);
+            let idx = /[A-Z]/.test(char) ? ALPHABET.indexOf(char) : DIGITS.indexOf(char);
+            
+            idx = encrypt ? 
+              (idx + shift) % mod : 
+              (idx - shift + mod) % mod;
+            
+            result += /[A-Z]/.test(char) ? ALPHABET[idx] : DIGITS[idx];
+            
+            if (autoRotate.checked) {
+              stepRotors(currentOffsets);
+              dateRotorInputs(currentOffsets);
+            }
+          } else {
+            result += char;
+          }
+        }
+        
+        return result;
+      }
+       
+      function updateRotorInputs(offsets) {
+        offsets.forEach((offset, i) => {
+          rotorInputs[i].value = offset;
+        });
+      } 
+      
+      
+      function randomizeRotors() {
+        rotorInputs.forEach(input => {
+          input.value = Math.floor(Math.random() * 26);
+          input.parentElement.parentElement.classList.add('rotor-spin');
+          setTimeout(() => {
+            input.parentElement.parentElement.classList.remove('rotor-spin');
+          }, 500);
+        });
+        showNotification('Rotores randomizados!');
+      }
+      
+      function resetRotors() {
+        initialOffsets.forEach((val, i) => {
+          rotorInputs[i].value = val;
+          rotorInputs[i].parentElement.parentElement.classList.add('rotor-spin');
+          setTimeout(() => {
+            rotorInputs[i].parentElement.parentElement.classList.remove('rotor-spin');
+          }, 500);
+        });
+        showNotification('Rotores resetados!');
+      }
+      
+      function clearAll() {
+        inputText.value = '';
+        outputText.textContent = '';
+        updateCharacterCount();
+        showNotification('Áreas de texto limpas!');
+      }
+      
+      // Event Listeners
+      // Listener para input manual nos rotores
+      rotorInputs.forEach(input => {
+        input.addEventListener('input', () => {
+          initialOffsets = null; // resetar inicialOffsets se o usuário mexer manualmente
+
+          let value = input.value.replace(/\D/g, ''); // remove não dígitos
+          value = value.slice(0, 2); // limita tamanho
+          let num = parseInt(value, 10);
+
+          if (!isNaN(num)) {
+            num = Math.min(25, Math.max(0, num)); // clamp 0-25
+            input.value = num;
+          } else {
+            input.value = '0';
+          }
+        });
+      });
+
+      // Setas para aumentar os rotores
+      document.querySelectorAll('.arrow.up').forEach(btn => {
+        btn.addEventListener('click', () => {
+          initialOffsets = null; // resetar initialOffsets ao usar setas
+          const idx = +btn.dataset.idx;
+          const input = rotorInputs[idx];
+          let value = parseInt(input.value, 10);
+          input.value = Math.min(25, value + 1);
+          input.parentElement.parentElement.classList.add('rotor-spin');
+          setTimeout(() => {
+            input.parentElement.parentElement.classList.remove('rotor-spin');
+          }, 500);
+        });
+      });
+
+      // Setas para diminuir os rotores
+      document.querySelectorAll('.arrow.down').forEach(btn => {
+        btn.addEventListener('click', () => {
+          initialOffsets = null; // resetar initialOffsets ao usar setas
+          const idx = +btn.dataset.idx;
+          const input = rotorInputs[idx];
+          let value = parseInt(input.value, 10);
+          input.value = Math.max(0, value - 1);
+          input.parentElement.parentElement.classList.add('rotor-spin');
+          setTimeout(() => {
+            input.parentElement.parentElement.classList.remove('rotor-spin');
+          }, 500);
+        });
+      });
+      
+      document.getElementById('encryptBtn').addEventListener('click', () => {
+        try {
+          if (initialOffsets === null) {
+            captureInitialOffsets();
+          }
+          if (!inputText.value.trim()) {
+            showNotification('Digite algum texto para criptografar!', 2000);
+            return;
+          }
+          
+          const bytes = new TextEncoder().encode(inputText.value);
+          const b32 = base32Encode(bytes);
+          const encrypted = enigma(b32, getOffsets(), equationSelect.value, true);
+          
+          outputText.textContent = useGalactic.checked ? encCustom(encrypted) : encrypted;
+          
+          showNotification('Texto criptografado com sucesso!');
+          updateStatus('Criptografia concluída');
+        } catch (error) {
+          console.error('Erro na criptografia:', error);
+          updateStatus('Erro na criptografia', true);
+          showNotification('Erro ao criptografar!', 3000);
+        }
+      });
+      
+      document.getElementById('decryptBtn').addEventListener('click', () => {
+        try {
+          if (initialOffsets === null) {
+            captureInitialOffsets();
+          }
+          if (!inputText.value.trim()) {
+            showNotification('Digite algum texto para descriptografar!', 2000);
+            return;
+          }
+          
+          const raw = useGalactic.checked ? decCustom(inputText.value) : inputText.value;
+          const decrypted = enigma(raw, getOffsets(), equationSelect.value, false);
+          const bytes = base32Decode(decrypted);
+          
+          outputText.textContent = new TextDecoder().decode(bytes);
+          
+          showNotification('Texto descriptografado com sucesso!');
+          updateStatus('Descriptografia concluída');
+        } catch (error) {
+          console.error('Erro na descriptografia:', error);
+          updateStatus('Erro na descriptografia', true);
+          showNotification('Erro ao descriptografar - verifique a chave!', 3000);
+        }
+      });
+      
+      document.getElementById('copyBtn').addEventListener('click', () => {
+        if (!outputText.textContent.trim()) {
+          showNotification('Nada para copiar!', 2000);
+          return;
+        }
+        
+        navigator.clipboard.writeText(outputText.textContent)
+          .then(() => {
+            showNotification('Copiado para a área de transferência!');
+          })
+          .catch(err => {
+            console.error('Erro ao copiar:', err);
+            showNotification('Falha ao copiar!', 3000);
+          });
+      });
+      
+      document.getElementById('pasteBtn').addEventListener('click', async () => {
+        try {
+          const text = await navigator.clipboard.readText();
+          inputText.value = text;
+          updateCharacterCount();
+          showNotification('Texto colado!');
+        } catch (err) {
+          console.error('Erro ao colar:', err);
+          showNotification('Falha ao colar!', 3000);
+        }
+      });
+      
+      document.getElementById('randomizeBtn').addEventListener('click', randomizeRotors);
+      document.getElementById('resetBtn').addEventListener('click', resetRotors);
+      document.getElementById('clearBtn').addEventListener('click', clearAll);
+      
+      inputText.addEventListener('input', updateCharacterCount);
+      
+      // Inicialização
+      updateCharacterCount();
+      updateStatus('Pronto');
+    })();
+  </script>   
+
+</body>
+</html>
+
+<!--
+  Máquina Enigma Avançada
+  Versão 2.0
+  Desenvolvido por João Paulo (TYP) Plöger
+  Data: 03/10/2025
+  
+  Esta versão inclui melhorias na interface, suporte a múltiplos rotores,
+  opções de criptografia avançadas e uma experiência de usuário aprimorada.
+  Licença: MIT
+  Use este código livremente, mas mantenha os créditos.
+-->
+
+/* 
+  Esta máquina Enigma é uma implementação avançada que simula o funcionamento
+  de uma máquina de criptografia clássica, com várias opções de configuração
+  e melhorias na usabilidade.
+  
+  Recursos:
+  - Criptografia e descriptografia com múltiplos rotores
+  - Suporte a diferentes algoritmos de criptografia
+  - Interface responsiva e moderna
+  - Opções para usar idioma galáctico e rotação automática dos rotores
+  - Copiar/colar texto facilmente
+  
+  Sinta-se à vontade para contribuir ou sugerir melhorias!
+  Para mais informações, visite o repositório no GitHub.
+*/
+
+<!-- script antigo removido:
+   <script>
+    'use strict';
+    (function() {
+      const ALPHABET32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+      function base32Encode(bytes) {
+        let bits=0, val=0, out='';
+        bytes.forEach(b => { val=(val<<8)|b; bits+=8;
+          while(bits>=5) { out+=ALPHABET32[(val>>(bits-5))&31]; bits-=5; }
+        });
+        if(bits>0) out+=ALPHABET32[(val<<(5-bits))&31];
+        return out;
+      }
+      function base32Decode(str) {
+        let bits=0, val=0, bytes=[];
+        str.replace(/=+/g,'').split('').forEach(ch => {
+          const idx=ALPHABET32.indexOf(ch);
+          if(idx<0) return;
+          val=(val<<5)|idx; bits+=5;
+          if(bits>=8) { bytes.push((val>>(bits-8))&0xFF); bits-=8; }
+        });
+        return new Uint8Array(bytes);
+      }
+      const ALPHABET='ABCDEFGHIJKLMNOPQRSTUVWXYZ', DIGITS='0123456789';
+      const CUSTOM={'A':'ᔑ','B':'ʖ','C':'ᓵ','D':'↸','E':'ᒷ','F':'⎓','G':'⊣','H':'⍑','I':'╎','J':'⋮','K':'ꖌ','L':'ꖎ','M':'ᒲ','N':'リ','O':'𝙹','P':'!¡','Q':'ᑑ','R':'∷','S':'ᓭ','T':'ℸ̣','U':'⚍','V':'⍊','W':'∴','X':'̇/','Y':'||','Z':'⨅'};
+      const REV=Object.fromEntries(Object.entries(CUSTOM).map(([k,v])=>[v,k]));
+      const rotorInputs=[
+        // atualizar se SHA256 for implementado
+        document.getElementById('rotor1'),document.getElementById('rotor2'),
+        document.getElementById('rotor3'),document.getElementById('rotor4'),
+        document.getElementById('rotor5'),document.getElementById('rotor6'),
+        document.getElementById('rotor7'),document.getElementById('rotor8'),
+        document.getElementById('rotor9'),document.getElementById('rotor10')
+      ];
+      const eq=document.getElementById('equationSelect'), inTxt=document.getElementById('inputText'), outTxt=document.getElementById('outputText');
+      function getOff() { return rotorInputs.map(i=>{ let v=parseInt(i.value,10); return isNaN(v)?0:Math.max(0,Math.min(25,v)); }); }
+      function computeShift(o,m,t) {
+        let s=0;
+        switch(t) {
+          case 'simple': s=o.reduce((a,c)=>a+c,0); break;
+          case 'exponential': s=o.reduce((a,c)=>a+c*c,0); break;
+          case 'cubic': s=o.reduce((a,c)=>a+c*c*c,0); break;
+          case 'product': s=o.reduce((a,c)=>a*(c+1),1); break;
+          case 'weighted': s=o.reduce((a,c,i)=>a+(i+1)*c,0); break;
+          case 'exp-combined': { const a=o.reduce((x,y)=>x+y,0), b=o.reduce((x,y)=>x+y*y,0); s=a*a+b; } break;
+          case 'mult-sum': s=o.reduce((a,c,i)=>i%2===0 ? a + c*(o[i+1]||1) : a,0); break;
+          case 'super': {
+            const a=o.reduce((x,y)=>x+y,0), b=o.reduce((x,y)=>x+y*y,0), c=o.reduce((x,y)=>x+y*y*y,0), d=o.reduce((x,y)=>x*(y+1),1), e=o.reduce((x,y,i)=>x+(i+1)*y,0);
+            const f=a*a+b, g=o.reduce((x,y,i)=>i%2===0?x+y*(o[i+1]||1):x,0);
+            const sum=a+b+c+d+e+f+g, prod=a*b*c*d*e*f*g;
+            s=(sum*prod)%m;
+          } break;
+        }
+        return s;
+      }
+      function step(o) {
+        o[0]=(o[0]+1)%26;
+        for(let i=0;i<o.length-1;i++) {
+          if(o[i]===0) o[i+1]=(o[i+1]+1)%26;
+          else break;
+        }
+      }
+      function enigma(txt,o,t,enc=true) {
+        const off=o.slice(); let res='';
+        for(const ch of txt) {
+          if(/[A-Z0-9]/.test(ch)) {
+            const mod=/[A-Z]/.test(ch)?26:10;
+            const sh=computeShift(off,mod,t);
+            let idx=/[A-Z]/.test(ch)?ALPHABET.indexOf(ch):DIGITS.indexOf(ch);
+            idx=enc?(idx+sh)%mod:(idx-sh+mod)%mod;
+            res+=/[A-Z]/.test(ch)?ALPHABET[idx]:DIGITS[idx];
+            step(off);
+          } else res+=ch;
+        }
+        return res;
+      }
+      function encCustom(s) { return s.split('').map(c=>CUSTOM[c]||c).join(''); }
+      function decCustom(s) {
+        let r=''; const glyphs=Object.values(CUSTOM).sort((a,b)=>b.length-a.length);
+        while(s.length) {
+          const m=glyphs.find(g=>s.startsWith(g));
+          if(m) { r+=REV[m]; s=s.slice(m.length); }
+          else { r+=s[0]; s=s.slice(1); }
+        }
+        return r;
+      }
+      document.querySelectorAll('.arrow.up').forEach(btn=>btn.addEventListener('click',()=>{
+        const i=+btn.dataset.idx; const inp=rotorInputs[i]; inp.value=Math.min(25,parseInt(inp.value,10)+1);
+      }));
+      document.querySelectorAll('.arrow.down').forEach(btn=>btn.addEventListener('click',()=>{
+        const i=+btn.dataset.idx; const inp=rotorInputs[i]; inp.value=Math.max(0,parseInt(inp.value,10)-1);
+      }));
+      document.getElementById('encryptBtn').addEventListener('click',()=>{
+        const b=new TextEncoder().encode(inTxt.value);
+        const b32=base32Encode(b);
+        const c=enigma(b32,getOff(),eq.value,true);
+        const useGalactic = document.getElementById('useGalactic').checked;
+        outTxt.textContent = useGalactic ? encCustom(c) : c;
+      });
+      document.getElementById('decryptBtn').addEventListener('click',()=>{
+        const useGalactic = document.getElementById('useGalactic').checked;
+        const raw = useGalactic ? decCustom(inTxt.value) : inTxt.value;
+        const b32 = enigma(raw,getOff(),eq.value,false);
+        const bytes=base32Decode(b32);
+        outTxt.textContent=new TextDecoder().decode(bytes);
+      });
+      document.getElementById('copyBtn').addEventListener('click',()=>{
+        navigator.clipboard.writeText(outTxt.textContent);
+      });
+      document.getElementById('pasteBtn').addEventListener('click',async()=>{
+        inTxt.value=await navigator.clipboard.readText();
+      });
+    })();
+  </script>
+-->
