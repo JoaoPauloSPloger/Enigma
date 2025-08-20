@@ -116,11 +116,7 @@
         </div>
       </div>
       <div style="grid-column:1/-1;text-align:center;">
-        
-<div style="grid-column:1/-1; text-align:center;">
-  <label><input type="checkbox" id="useGalactic"> Usar idioma galáctico</label>
-</div>
-<label for="equationSelect">Equação</label><br>
+        <label for="equationSelect">Equação</label><br>
         <select id="equationSelect" tabindex="-1">
           <option value="super">Super ENIGMA</option>
           <option value="simple">Soma Simples</option>
@@ -167,7 +163,6 @@
       const CUSTOM={'A':'ᔑ','B':'ʖ','C':'ᓵ','D':'↸','E':'ᒷ','F':'⎓','G':'⊣','H':'⍑','I':'╎','J':'⋮','K':'ꖌ','L':'ꖎ','M':'ᒲ','N':'リ','O':'𝙹','P':'!¡','Q':'ᑑ','R':'∷','S':'ᓭ','T':'ℸ̣','U':'⚍','V':'⍊','W':'∴','X':'̇/','Y':'||','Z':'⨅'};
       const REV=Object.fromEntries(Object.entries(CUSTOM).map(([k,v])=>[v,k]));
       const rotorInputs=[
-        // atualizar se SHA256 for implementado
         document.getElementById('rotor1'),document.getElementById('rotor2'),
         document.getElementById('rotor3'),document.getElementById('rotor4'),
         document.getElementById('rotor5'),document.getElementById('rotor6'),
@@ -236,13 +231,11 @@
         const b=new TextEncoder().encode(inTxt.value);
         const b32=base32Encode(b);
         const c=enigma(b32,getOff(),eq.value,true);
-        const useGalactic = document.getElementById('useGalactic').checked;
-        outTxt.textContent = useGalactic ? encCustom(c) : c;
+        outTxt.textContent=encCustom(c);
       });
       document.getElementById('decryptBtn').addEventListener('click',()=>{
-        const useGalactic = document.getElementById('useGalactic').checked;
-        const raw = useGalactic ? decCustom(inTxt.value) : inTxt.value;
-        const b32 = enigma(raw,getOff(),eq.value,false);
+        const raw=decCustom(inTxt.value);
+        const b32=enigma(raw,getOff(),eq.value,false);
         const bytes=base32Decode(b32);
         outTxt.textContent=new TextDecoder().decode(bytes);
       });
