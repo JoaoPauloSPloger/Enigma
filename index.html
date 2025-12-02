@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang='pt-BR'>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; script-src-elem 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com;">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Máquina Enigma Avançada</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Máquina Enigma Avançada</h1>
+    
+    <div class="section">
+        <label>Método de Criptografia / Hash</label>
+        <div class="method-selector">
+            <input type="radio" name="method" id="method-enigma" value="enigma" checked>
+            <label for="method-enigma">Enigma (Base32)</label>
+
+            <input type="radio" name="method" id="method-base64" value="base64">
+            <label for="method-base64">Base64</label>
+
+            <input type="radio" name="method" id="method-sha1" value="sha1">
+            <label for="method-sha1">SHA-1 (Hash)</label>
+
+            <input type="radio" name="method" id="method-sha256" value="sha256">
+            <label for="method-sha256">SHA-256 (Hash)</label>
+
+            <input type="radio" name="method" id="method-sha512" value="sha512">
+            <label for="method-sha512">SHA-512 (Hash)</label>
+
+            <input type="radio" name="method" id="method-cascade" value="cascade">
+            <label for="method-cascade">Cascata (B32/Enigma/SHA)</label>
+
+            <input type="radio" name="method" id="method-custom" value="custom">
+            <label for="method-custom">Cascata Personalizada</label>
+        </div>
+    </div>
+
+    <!-- Custom Cascade UI (Hidden by default) -->
+    <div id="custom-cascade-ui" class="section" style="display:none; background:rgba(0,0,0,0.2); padding:15px; border-radius:8px;">
+        <h3 style="color:var(--highlight); margin-bottom:10px;">Pipeline Personalizado</h3>
+        <div class="controls" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin: 10px 0;">
+            <select id="customStepSelect">
+                <option value="enigma">Enigma (Base32)</option>
+                <option value="base64">Base64</option>
+                <option value="sha1">SHA-1 (Stream)</option>
+                <option value="sha256">SHA-256 (Stream)</option>
+                <option value="sha512">SHA-512 (Stream)</option>
+            </select>
+            <button id="addStepBtn" class="secondary" style="background:var(--success); color:white;">+ Adicionar</button>
+            <button id="clearStepsBtn" class="secondary" style="background:var(--warning); color:white;">Limpar Pipeline</button>
+        </div>
+        <div class="checkbox-container">
+             <input type="checkbox" id="pipelineLoop">
+             <label for="pipelineLoop">Repetir Pipeline (Loop)</label>
+             <input type="number" id="loopCount" value="1" min="1" max="10" style="width:60px; margin-left:10px; padding:5px; border-radius:4px; border:none;">
+        </div>
+        <div id="pipeline-list" style="margin-top:10px; font-family:'JetBrains Mono', monospace; font-size:0.9rem;">
+            <div style="color:var(--text-muted); font-style:italic;">Nenhuma etapa adicionada.</div>
+        </div>
+    </div>
+
+    <!-- Enigma Settings (Only visible when Enigma is selected) -->
+    <div id="enigma-settings" class="settings-row">
+      <div class="setting-group">
+        <label for="equationSelect">Algoritmo de Deslocamento</label>
+        <select id="equationSelect">
+          <option value="super">Super ENIGMA</option>
+          <option value="simple">Soma Simples</option>
+          <option value="exponential">Soma dos Quadrados</option>
+          <option value="cubic">Soma dos Cubos</option>
+          <option value="product">Produto dos Rotores</option>
+          <option value="weighted">Soma Ponderada</option>
+          <option value="exp-combined">Exponenciação Combinada</option>
+          <option value="mult-sum">Multiplicação e Soma</option>
+        </select>
+      </div>
+      
+      <div class="setting-group">
+        <label>Opções Visuais / Mecânicas</label>
+        <div class="checkbox-container">
+          <input type="checkbox" id="useGalactic">
+          <label for="useGalactic">Usar Alfabeto Galáctico</label>
+        </div>
+        <div class="checkbox-container">
+          <input type="checkbox" id="autoRotate" checked>
+          <label for="autoRotate">Rotação automática dos rotores</label>
+        </div>
+      </div>
+    </div>
+    
+    <div class="text-area-container">
+      <label for="inputText">Texto de Entrada</label>
+      <textarea id="inputText" placeholder="Digite o texto aqui..."></textarea>
+    </div>
+    
+    <!-- Rotors (Only visible when Enigma is selected) -->
+    <div id="rotor-container" class="controls">
+      <!-- Rotors 1-10 will be generated by JS or we can hardcode them here to be safe -->
+      <!-- Hardcoding for clarity as in original -->
+       <!-- Rotors 1-5 -->
+       <div class="rotor"><label>R1</label><div class="rotor-control"><button class="arrow up" data-idx="0">▲</button><input id="rotor1" type="text" value="0" maxlength="2"><button class="arrow down" data-idx="0">▼</button></div></div>
+       <div class="rotor"><label>R2</label><div class="rotor-control"><button class="arrow up" data-idx="1">▲</button><input id="rotor2" type="text" value="0" maxlength="2"><button class="arrow down" data-idx="1">▼</button></div></div>
+       <div class="rotor"><label>R3</label><div class="rotor-control"><button class="arrow up" data-idx="2">▲</button><input id="rotor3" type="text" value="0" maxlength="2"><button class="arrow down" data-idx="2">▼</button></div></div>
+       <div class="rotor"><label>R4</label><div class="rotor-control"><button class="arrow up" data-idx="3">▲</button><input id="rotor4" type="text" value="0" maxlength="2"><button class="arrow down" data-idx="3">▼</button></div></div>
+       <div class="rotor"><label>R5</label><div class="rotor-control"><button class="arrow up" data-idx="4">▲</button><input id="rotor5" type="text" value="0" maxlength="2"><button class="arrow down" data-idx="4">▼</button></div></div>
+       <!-- Rotors 6-10 -->
+       <div class="rotor"><label>R6</label><div class="rotor-control"><button class="arrow up" data-idx="5">▲</button><input id="rotor6" type="text" value="0" maxlength="2"><button class="arrow down" data-idx="5">▼</button></div></div>
+       <div class="rotor"><label>R7</label><div class="rotor-control"><button class="arrow up" data-idx="6">▲</button><input id="rotor7" type="text" value="0" maxlength="2"><button class="arrow down" data-idx="6">▼</button></div></div>
+       <div class="rotor"><label>R8</label><div class="rotor-control"><button class="arrow up" data-idx="7">▲</button><input id="rotor8" type="text" value="0" maxlength="2"><button class="arrow down" data-idx="7">▼</button></div></div>
+       <div class="rotor"><label>R9</label><div class="rotor-control"><button class="arrow up" data-idx="8">▲</button><input id="rotor9" type="text" value="0" maxlength="2"><button class="arrow down" data-idx="8">▼</button></div></div>
+       <div class="rotor"><label>R10</label><div class="rotor-control"><button class="arrow up" data-idx="9">▲</button><input id="rotor10" type="text" value="0" maxlength="2"><button class="arrow down" data-idx="9">▼</button></div></div>
+    </div>
+    
+    <div class="buttons">
+      <button id="encryptBtn" title="Processar (Criptografar/Hash)">
+        <span>🔒</span> Processar / Criptografar
+      </button>
+      <button id="decryptBtn" title="Reverter (Descriptografar)">
+        <span>🔓</span> Descriptografar
+      </button>
+      <button id="randomizeBtn" class="secondary" title="Valores aleatórios para os rotores">
+        <span>🎲</span> Aleatório
+      </button>
+      <button id="resetBtn" class="secondary" title="Resetar parâmetros">
+        <span>🔄</span> Resetar
+      </button>
+    </div>
+    
+    <div class="buttons">
+      <button id="copyBtn" class="secondary" title="Copiar texto de saída">
+        <span>📋</span> Copiar
+      </button>
+      <button id="pasteBtn" class="secondary" title="Colar texto para entrada">
+        <span>📎</span> Colar
+      </button>
+      <button id="clearBtn" class="secondary" title="Limpar todas as áreas de texto">
+        <span>🧹</span> Limpar
+      </button>
+    </div>
+    
+    <div class="text-area-container">
+      <label for="outputText">Resultado</label>
+      <div id="outputText" contenteditable="true" placeholder="Resultado aparecerá aqui..."></div>
+    </div>
+    
+    <div class="status-bar">
+      <div id="statusMessage">Pronto</div>
+      <div id="characterCount">0 caracteres</div>
+    </div>
+  </div>
+  
+  <div class="notification" id="notification"></div>
+  
+  <script src="js/script.js"></script>
+</body>
+</html>

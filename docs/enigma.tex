@@ -1,0 +1,224 @@
+\documentclass[12pt, a4paper]{article}
+
+% ==== Codificação, Idioma e Tipografia ====
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{microtype} % Melhora o espaçamento e justificação
+\usepackage{lmodern}   % Fonte moderna vetorial
+
+% ==== Matemática e Símbolos ====
+\usepackage{amsmath, amssymb, amsfonts, amsthm}
+\usepackage{mathtools}
+
+% ==== Layout e Estilo ====
+\usepackage{geometry}
+\geometry{
+    a4paper,
+    left=30mm,
+    right=20mm,
+    top=30mm,
+    bottom=20mm
+}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs} % Tabelas profissionais
+\usepackage[ruled,vlined]{algorithm2e} % Pseudocódigo
+
+% ==== Hiperlinks e URLs ====
+\usepackage[colorlinks=true, linkcolor=blue, citecolor=green, urlcolor=blue]{hyperref}
+\usepackage{url}
+
+% ==== Configuração de Seções ====
+\titleformat{\section}{\large\bfseries\uppercase}{\thesection}{1em}{}
+\titleformat{\subsection}{\bfseries}{\thesubsection}{1em}{}
+
+% ==== Cabeçalho e Rodapé ====
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\footnotesize \textit{Enigma Avançada - Criptografia Dinâmica}}
+\lhead{\footnotesize \textbf{JP(TY)SP}}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ==== Metadados ====
+\title{
+    \vspace{-2cm}
+    \rule{\linewidth}{0.5mm} \\[0.4cm]
+    \Huge \textbf{Enigma Avançada} \\
+    \Large Uma Abordagem Dinâmica e Polialfabética \\ Inspirada na Máquina Enigma \\[0.4cm]
+    \rule{\linewidth}{0.5mm}
+}
+\author{\textbf{JP(TY)SP}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+    \noindent Este artigo apresenta o projeto \textit{Enigma Avançada}, um sistema de criptografia digital inspirado na histórica máquina eletromecânica utilizada durante a Segunda Guerra Mundial. Proposto como uma ferramenta educacional e experimental, o sistema moderniza o conceito de rotores, aplicando-o sobre um alfabeto Base32 (RFC 4648) e introduzindo vetores de deslocamento baseados em funções matemáticas não lineares. O trabalho detalha a arquitetura do sistema, as equações de deslocamento rotacional, a análise do espaço de chaves e a implementação de uma interface interativa. Adicionalmente, discute-se a inclusão de camadas de ofuscação visual através de alfabetos simbólicos, visando explorar conceitos de esteganografia e representação estética de dados cifrados.
+    
+    \vspace{0.5cm}
+    \noindent \textbf{Palavras-chave:} Criptografia Polialfabética; Máquina Enigma; Base32; Cifras de Substituição Dinâmica; Segurança Computacional.
+\end{abstract}
+
+\vspace{0.5cm}
+
+\begin{center}
+    \textbf{Keywords:}
+    {\small\itshape
+    Polyalphabetic Cryptography, Enigma Machine, Advanced Cipher System, Digital Rotors, Base32 Encoding, Dynamic Substitution Cipher, Cryptographic Engineering.
+    }
+\end{center}
+
+\newpage
+\tableofcontents
+\newpage
+
+\section{Introdução}
+
+A Máquina Enigma, patenteada originalmente em 1918 pelo engenheiro alemão Arthur Scherbius, representa um marco na história da criptografia. Inicialmente destinada ao uso comercial, foi amplamente adotada pela Wehrmacht e pela Kriegsmarine durante a Segunda Guerra Mundial, tornando-se peça central nas estratégias de comunicação do Eixo.
+
+O funcionamento da Enigma baseava-se em um circuito eletromecânico complexo. Ao pressionar uma tecla, um sinal elétrico percorria um \textit{plugboard} (painel de conexões), atravessava uma série de três a cinco rotores móveis e era refletido por um componente denominado \textit{Umkehrwalze} (refletor), retornando pelos rotores em caminho reverso até iluminar o caractere cifrado. A cada tecla pressionada, pelo menos um rotor avançava, alterando o circuito elétrico e, consequentemente, o alfabeto de substituição. Essa propriedade polialfabética garantia que a mesma letra, digitada repetidamente, fosse cifrada em caracteres distintos, elevando exponencialmente a complexidade da criptoanálise para os padrões da época \cite{wikiEnigma, wikiEnigmaPTBR}.
+
+A quebra da Enigma, iniciada por matemáticos poloneses como Marian Rejewski e consolidada pelos esforços britânicos em Bletchley Park sob a liderança de Alan Turing, não apenas encurtou a guerra em anos, mas também impulsionou o desenvolvimento da computação moderna \cite{TNMOCenigma}.
+
+\subsection{Objetivo do Projeto}
+
+O projeto \textit{Enigma Avançada} propõe uma releitura digital deste mecanismo clássico, expandindo-o para atender a requisitos didáticos modernos. Diferente da implementação física restrita a 26 caracteres do alfabeto latino, esta versão adota padrões digitais robustos e flexibilidade matemática.
+
+Os objetivos específicos incluem:
+\begin{enumerate}
+    \item \textbf{Expansão do Mecanismo Rotacional:} Implementação de um vetor de até 10 rotores virtuais independentes $\vec{R} = [R_1, \dots, R_{10}]$, superando o limite mecânico tradicional.
+    \item \textbf{Codificação Base32:} Adoção do padrão RFC 4648 (Alfabeto $A-Z$ e $2-7$) para a entrada de dados, garantindo que o texto cifrado seja seguro para transmissão em URLs e sistemas de arquivos, eliminando ambiguidade de caixa (case-insensitive).
+    \item \textbf{Funções de Deslocamento Não Lineares:} Substituição da fiação física fixa por funções matemáticas dinâmicas (ex.: somas quadráticas, produtos e composições modulares) para determinar o deslocamento de cifra.
+    \item \textbf{Interface Interativa:} Desenvolvimento de uma interface web responsiva para visualização em tempo real do estado interno da máquina, promovendo o aprendizado sobre entropia e ciclos criptográficos.
+\end{enumerate}
+
+\section{Fundamentação Teórica}
+
+\subsection{Cifras Polialfabéticas e Estado}
+Uma cifra de substituição monoalfabética mapeia cada símbolo do texto claro a um símbolo fixo do texto cifrado ($P \to C$). Já sistemas polialfabéticos, como a Enigma, utilizam uma função $E(P, S_t) \to C$, onde $S_t$ é o estado interno da máquina no tempo $t$. Como $S_t$ muda a cada iteração ($S_{t+1} = f(S_t)$), a relação entre texto claro e cifrado é dinâmica, resistindo a análises de frequência simples.
+
+\subsection{Codificação Base32}
+A codificação Base32 utiliza um alfabeto de 32 caracteres, consistindo nas letras maiúsculas A--Z e nos dígitos 2--7. Sendo $2^5 = 32$, cada caractere pode representar exatamente 5 bits de informação. A escolha deste alfabeto para a \textit{Enigma Avançada} visa:
+\begin{itemize}
+    \item \textbf{Compatibilidade:} Caracteres seguros para URLs e nomes de arquivos.
+    \item \textbf{Uniformidade:} O espaço de módulo $m=32$ simplifica operações bit a bit, diferentemente do módulo 26.
+\end{itemize}
+
+\section{Arquitetura do Sistema}
+
+A arquitetura da \textit{Enigma Avançada} é composta por três estágios principais: Pré-processamento, Núcleo Criptográfico e Pós-processamento.
+
+\subsection{Definição Formal}
+
+Seja $\mathcal{A}$ o alfabeto Base32 tal que $|\mathcal{A}| = 32$. Seja $P$ o texto claro e $C$ o texto cifrado. O estado da máquina é definido pelo vetor de rotores $\vec{R} \in \mathbb{Z}_{26}^{10}$ (note que os rotores simulam a mecânica original de 26 posições, embora o deslocamento final seja aplicado $\mod 32$).
+
+\subsection{Equações de Deslocamento ($\Psi$)}
+
+O "coração" da cifra é a função de deslocamento $\Psi(\vec{R})$, que determina o valor $S$ a ser somado ao índice do caractere atual. O sistema implementa múltiplos modos de operação:
+
+\begin{description}
+    \item[Modo 1: Soma Linear] $S = \sum R_i$
+    \item[Modo 2: Quadrática] $S = \sum R_i^2$
+    \item[Modo 3: Cúbica] $S = \sum R_i^3$
+    \item[Modo 4: Produto Ponderado] $S = \prod (R_i + 1)$
+    \item[Modo 5: Ponderação por Índice] $S = \sum (i \cdot R_i)$
+    \item[Modo 8: Super Enigma (Composta)]
+    Este modo combina todas as estratégias anteriores para maximizar a entropia do deslocamento. Definimos os componentes auxiliares:
+    \[ A = \sum R_i, \quad B = \sum R_i^2, \quad C = \sum R_i^3 \]
+    \[ D = \prod (R_i + 1), \quad E = \sum i \cdot R_i, \quad F = A^2 + B \]
+    \[ G = \sum_{k=0}^{4} (R_{2k} \cdot R_{2k+1}) \]
+    
+    O deslocamento final $S$ é dado por uma função de agregação não linear sobre o conjunto $T = \{A, B, C, D, E, F, G\}$:
+    \begin{equation}
+        S = \left( \sum_{X \in T} X \cdot \prod_{Y \in T} (Y - 1) \right)
+    \end{equation}
+    Este valor é calculado com precisão arbitrária e posteriormente reduzido modulo 32 para a operação de cifra.
+\end{description}
+
+\section{Algoritmo de Cifra}
+
+O processo de cifragem e decifragem para um caractere $x$ na posição $t$ do texto é descrito abaixo.
+
+\subsection{Cifragem}
+Dado um caractere de entrada $x$, obtemos seu índice $idx(x) \in [0, 31]$. O índice cifrado $c$ é:
+\begin{equation}
+    c = (idx(x) + \Psi(\vec{R}_t)) \mod 32
+\end{equation}
+Onde $\vec{R}_t$ é a configuração dos rotores no tempo $t$.
+
+\subsection{Decifragem}
+O processo inverso subtrai o deslocamento gerado pelo mesmo estado $\vec{R}_t$:
+\begin{equation}
+    p = (idx(c) - \Psi(\vec{R}_t)) \mod 32
+\end{equation}
+\textit{Nota:} Em aritmética modular, subtrair $k$ equivale a somar $m-k$. Portanto, $p = (idx(c) - S + 32) \mod 32$.
+
+\subsection{Atualização de Estado (Stepping)}
+Após o processamento de cada caractere, o vetor de rotores é atualizado. A implementação simula um odômetro digital: o rotor $R_{10}$ incrementa a cada passo. Quando $R_i$ completa uma volta ($25 \to 0$), o rotor vizinho $R_{i-1}$ é incrementado.
+
+\begin{algorithm}[H]
+\SetAlgoLined
+\KwData{Vetor de Rotores $\vec{R}$}
+\KwResult{Vetor $\vec{R}$ atualizado}
+ $i \leftarrow 10$\;
+ \While{$i \geq 1$}{
+  $R_i \leftarrow (R_i + 1) \mod 26$\;
+  \eIf{$R_i \neq 0$}{
+   \textbf{break} (fim do carry)\;
+   }{
+   $i \leftarrow i - 1$\;
+  }
+ }
+ \caption{Lógica de Atualização dos Rotores (Odômetro)}
+\end{algorithm}
+
+\section{Análise de Segurança e Espaço de Chaves}
+
+A robustez da \textit{Enigma Avançada} reside no tamanho do seu espaço de estados e na não-linearidade das funções de deslocamento.
+
+\subsection{Espaço de Chaves ($\mathcal{K}$)}
+O espaço total de configurações iniciais é determinado pelos 10 rotores de 26 posições:
+\[ |\mathcal{K}_{rotores}| = 26^{10} \approx 1,41 \times 10^{14} \]
+Considerando os 8 modos de operação matemática selecionáveis, o espaço total expande para:
+\[ |\mathcal{K}_{total}| = 8 \times 26^{10} \approx 1,13 \times 10^{15} \]
+Isso equivale a aproximadamente 50 bits de entropia apenas na configuração inicial, sem considerar a complexidade criptoanalítica introduzida pelas equações não lineares (Modo Super Enigma), que dificultam ataques de texto claro conhecido.
+
+\section{Implementação e Interface}
+
+O sistema foi desenvolvido utilizando tecnologias web padrão (HTML5, CSS3 e JavaScript ES6+), permitindo execução client-side segura (sem envio de dados para servidores).
+
+\begin{itemize}
+    \item \textbf{Visualização:} Os rotores são exibidos como componentes gráficos dinâmicos.
+    \item \textbf{Alfabeto Galáctico:} Uma camada opcional de ofuscação visual mapeia os caracteres Base32 resultantes para glifos simbólicos (inspirados no \textit{Standard Galactic Alphabet}). Esta etapa não adiciona entropia matemática, mas serve como barreira visual e elemento lúdico.
+\end{itemize}
+
+\section{Conclusão}
+
+O projeto \textit{Enigma Avançada} demonstra como princípios criptográficos históricos podem ser revitalizados com técnicas modernas de engenharia de software. Ao desacoplar a lógica de cifra das limitações mecânicas, criou-se um sistema com alto valor pedagógico, permitindo a exploração prática de conceitos como aritmética modular, entropia de Shannon e codificação de dados. Futuras iterações poderão incluir a integração de um \textit{Plugboard} digital e a capacidade de processamento de arquivos binários.
+
+% ==== Bibliografia ====
+\newpage
+\begin{thebibliography}{9}
+
+\bibitem{wikiEnigma}
+WIKIPEDIA. \textit{Enigma machine}. Disponível em: \url{https://en.m.wikipedia.org/wiki/Enigma_machine}. Acesso em: 04 ago. 2025.
+
+\bibitem{wikiEnigmaPTBR}
+WIKIPEDIA. \textit{Enigma (máquina)}. Disponível em: \url{https://pt.wikipedia.org/wiki/Enigma_(m%C3%A1quina)}. Acesso em: 04 ago. 2025.
+
+\bibitem{TNMOCenigma}
+THE NATIONAL MUSEUM OF COMPUTING. \textit{Bombe and Enigma: The History}. Disponível em: \url{https://www.tnmoc.org/bh-2-the-enigma-machine}. Acesso em: 04 ago. 2025.
+
+\bibitem{rfc4648}
+JOSEFSSON, S. \textit{The Base16, Base32, and Base64 Data Encodings}. RFC 4648, Internet Engineering Task Force, 2006.
+
+\end{thebibliography}
+
+\end{document}

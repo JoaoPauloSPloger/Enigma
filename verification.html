@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suíte de Verificação Enigma Avançada v2</title>
+    <style>
+        body { font-family: 'Courier New', monospace; background: #1a1a2e; color: #fff; padding: 20px; }
+        h1 { color: #e94560; text-align: center; }
+        .test-container { max-width: 900px; margin: 0 auto; background: #16213e; padding: 20px; border-radius: 8px; }
+        .test-case { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #333; align-items: center; }
+        .test-case:last-child { border-bottom: none; }
+        .pass { color: #4caf50; font-weight: bold; }
+        .fail { color: #e94560; font-weight: bold; }
+        .status { min-width: 80px; text-align: right; }
+        .details { flex-grow: 1; margin-right: 20px; }
+        button { background: #e94560; color: white; border: none; padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 4px; display: block; margin: 20px auto; }
+        button:hover { background: #d13354; }
+        #summary { text-align: center; margin-top: 20px; font-size: 1.2rem; }
+        .hidden-ui { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="test-container">
+    <h1>Verificação do Sistema v2</h1>
+    <div id="test-list">Aguardando início...</div>
+    <div id="summary"></div>
+    <button onclick="runAllTests()">Executar Testes</button>
+</div>
+
+<!-- Hidden Enigma UI elements required by script.js -->
+<div class="hidden-ui">
+    <input id="rotor1" value="0"><input id="rotor2" value="0"><input id="rotor3" value="0"><input id="rotor4" value="0"><input id="rotor5" value="0">
+    <input id="rotor6" value="0"><input id="rotor7" value="0"><input id="rotor8" value="0"><input id="rotor9" value="0"><input id="rotor10" value="0">
+    <select id="equationSelect">
+        <option value="super">Super ENIGMA</option>
+        <option value="simple">Soma Simples</option>
+        <option value="exponential">Soma dos Quadrados</option>
+        <option value="cubic">Soma dos Cubos</option>
+        <option value="product">Produto dos Rotores</option>
+        <option value="weighted">Soma Ponderada</option>
+        <option value="exp-combined">Exponenciação Combinada</option>
+        <option value="mult-sum">Multiplicação e Soma</option>
+    </select>
+    <textarea id="inputText"></textarea>
+    <div id="outputText"></div>
+    <input type="checkbox" id="useGalactic">
+    <input type="checkbox" id="autoRotate">
+    <div id="statusMessage"></div>
+    <div id="characterCount"></div>
+    <div id="notification"></div>
+    <div id="rotor-container"></div>
+    <div id="enigma-settings"></div>
+    <button id="encryptBtn"></button>
+    <button id="decryptBtn"></button>
+    <button id="randomizeBtn"></button>
+    <button id="resetBtn"></button>
+    <button id="copyBtn"></button>
+    <button id="pasteBtn"></button>
+    <button id="clearBtn"></button>
+    
+    <div class="method-selector">
+        <input type="radio" name="method" value="enigma" checked>
+        <input type="radio" name="method" value="base64">
+        <input type="radio" name="method" value="sha1">
+        <input type="radio" name="method" value="sha256">
+        <input type="radio" name="method" value="sha512">
+        <input type="radio" name="method" value="cascade">
+        <input type="radio" name="method" value="custom">
+    </div>
+
+    <!-- Custom Cascade UI -->
+    <div id="custom-cascade-ui">
+        <select id="customStepSelect">
+            <option value="enigma">Enigma (Base32)</option>
+            <option value="base64">Base64</option>
+            <option value="sha1">SHA-1 (Stream)</option>
+            <option value="sha256">SHA-256 (Stream)</option>
+            <option value="sha512">SHA-512 (Stream)</option>
+        </select>
+        <button id="addStepBtn">Add</button>
+        <button id="clearStepsBtn">Clear</button>
+        <input type="checkbox" id="pipelineLoop">
+        <input type="number" id="loopCount" value="1">
+        <div id="pipeline-list"></div>
+    </div>
+</div>
+
+<script src="js/script.js"></script>
+<script>
+    // Test Utilities
+    const testList = document.getElementById('test-list');
+    const summary = document.getElementById('summary');
+    let passedCount = 0;
+    let totalCount = 0;
+
+    function addResult(name, passed, message = '') {
+        totalCount++;
+        if (passed) passedCount++;
+        
+        const div = document.createElement('div');
+        div.className = 'test-case';
+        div.innerHTML = `
+            <div class="details"><strong>${name}</strong><br><small>${message}</small></div>
+            <div class="status ${passed ? 'pass' : 'fail'}">${passed ? 'PASSOU' : 'FALHOU'}</div>
+        `;
+        testList.appendChild(div);
+    }
+
+    async function setMethod(val) {
+        const radio = document.querySelector(`input[name="method"][value="${val}"]`);
+        if(radio) {
+            radio.checked = true;
+            radio.dispatchEvent(new Event('change'));
+        }
+    }
+
+    async function setEquation(val) {
+        document.getElementById('equationSelect').value = val;
+    }
+
+    function resetUI() {
+        document.getElementById('resetBtn').click();
+        document.getElementById('inputText').value = '';
+        document.getElementById('outputText').innerText = '';
+        document.getElementById('autoRotate').checked = false;
+        document.getElementById('useGalactic').checked = false;
+        // Clear pipeline
+        document.getElementById('clearStepsBtn').click();
+        document.getElementById('loopCount').value = 1;
+    }
+
+    // Test Suite
+    async function runAllTests() {
+        testList.innerHTML = '';
+        passedCount = 0;
+        totalCount = 0;
+        summary.innerText = 'Executando...';
+
+        try {
+            // === TEST 1: ENIGMA SIMPLE ===
+            resetUI();
+            setMethod('enigma');
+            setEquation('simple');
+            document.getElementById('inputText').value = 'TESTE123';
+            document.getElementById('encryptBtn').click();
+            await new Promise(r => setTimeout(r, 50));
+            const encEnigma = document.getElementById('outputText').innerText;
+            
+            resetUI();
+            setMethod('enigma');
+            setEquation('simple');
+            document.getElementById('inputText').value = encEnigma;
+            document.getElementById('decryptBtn').click();
+            await new Promise(r => setTimeout(r, 50));
+            
+            addResult('Enigma Simples (Ida e Volta)', 
+                document.getElementById('outputText').innerText === 'TESTE123',
+                `Esperado: TESTE123, Obtido: ${document.getElementById('outputText').innerText}`
+            );
+
+            // === TEST 2: SHA-1 Stream ===
+            resetUI();
+            setMethod('sha1');
+            document.getElementById('inputText').value = 'SHA1_TEST';
+            document.getElementById('encryptBtn').click();
+            await new Promise(r => setTimeout(r, 100));
+            const encSha1 = document.getElementById('outputText').innerText;
+            
+            resetUI();
+            setMethod('sha1');
+            document.getElementById('inputText').value = encSha1;
+            document.getElementById('decryptBtn').click();
+            await new Promise(r => setTimeout(r, 100));
+            
+            addResult('SHA-1 (Stream) Reversível',
+                document.getElementById('outputText').innerText === 'SHA1_TEST',
+                'Verifica integridade SHA-1'
+            );
+
+            // === TEST 3: SHA-512 Stream ===
+            resetUI();
+            setMethod('sha512');
+            document.getElementById('inputText').value = 'SHA512_TEST';
+            document.getElementById('encryptBtn').click();
+            await new Promise(r => setTimeout(r, 100));
+            const encSha512 = document.getElementById('outputText').innerText;
+            
+            resetUI();
+            setMethod('sha512');
+            document.getElementById('inputText').value = encSha512;
+            document.getElementById('decryptBtn').click();
+            await new Promise(r => setTimeout(r, 100));
+            
+            addResult('SHA-512 (Stream) Reversível',
+                document.getElementById('outputText').innerText === 'SHA512_TEST',
+                'Verifica integridade SHA-512'
+            );
+
+            // === TEST 4: CUSTOM PIPELINE ===
+            resetUI();
+            setMethod('custom');
+            // Build: B32 -> SHA1
+            document.getElementById('customStepSelect').value = 'enigma'; // "Enigma" is B32 wrapper in UI logic
+            document.getElementById('addStepBtn').click();
+            document.getElementById('customStepSelect').value = 'sha1';
+            document.getElementById('addStepBtn').click();
+            
+            document.getElementById('inputText').value = 'PIPELINE';
+            document.getElementById('encryptBtn').click();
+            await new Promise(r => setTimeout(r, 200));
+            const encPipe = document.getElementById('outputText').innerText;
+            
+            resetUI();
+            setMethod('custom');
+            document.getElementById('customStepSelect').value = 'enigma';
+            document.getElementById('addStepBtn').click();
+            document.getElementById('customStepSelect').value = 'sha1';
+            document.getElementById('addStepBtn').click();
+            
+            document.getElementById('inputText').value = encPipe;
+            document.getElementById('decryptBtn').click();
+            await new Promise(r => setTimeout(r, 200));
+            
+            addResult('Pipeline Customizado (Enigma->SHA1)',
+                document.getElementById('outputText').innerText === 'PIPELINE',
+                'Verifica reversibilidade de pipeline'
+            );
+            
+             // === TEST 5: LOOP ===
+            resetUI();
+            setMethod('custom');
+            document.getElementById('customStepSelect').value = 'base64';
+            document.getElementById('addStepBtn').click();
+            document.getElementById('loopCount').value = 2; // Double B64
+            
+            document.getElementById('inputText').value = 'A'; // A -> QQ== -> UVE9PQ==
+            document.getElementById('encryptBtn').click();
+            await new Promise(r => setTimeout(r, 100));
+            const encLoop = document.getElementById('outputText').innerText;
+            
+            resetUI();
+            setMethod('custom');
+            document.getElementById('customStepSelect').value = 'base64';
+            document.getElementById('addStepBtn').click();
+            document.getElementById('loopCount').value = 2;
+            
+            document.getElementById('inputText').value = encLoop;
+            document.getElementById('decryptBtn').click();
+            await new Promise(r => setTimeout(r, 100));
+            
+            addResult('Loop (2x Base64)',
+                document.getElementById('outputText').innerText === 'A' && encLoop === 'UVE9PQ==',
+                `Esperado: A / UVE9PQ==, Obtido: ${document.getElementById('outputText').innerText} / ${encLoop}`
+            );
+
+
+        } catch (e) {
+            console.error(e);
+            addResult('ERRO CRÍTICO', false, e.message);
+        }
+
+        summary.innerText = `Concluído: ${passedCount}/${totalCount} testes passaram.`;
+        if (passedCount === totalCount) {
+            summary.style.color = '#4caf50';
+            summary.innerText += ' SUCESSO.';
+        } else {
+            summary.style.color = '#e94560';
+        }
+    }
+</script>
+
+</body>
+</html>
