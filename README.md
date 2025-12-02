@@ -1,3 +1,77 @@
+# Advanced Enigma Machine
+
+This project is a modern, digital reinterpretation of the classic Enigma Machine, expanding its concepts with Base32 cryptography, non-linear shift functions, and hashing capabilities.
+
+## Features
+
+### Encryption and Hashing Methods
+The system offers multiple selectable operation modes:
+
+1.  **Enigma (Base32)**:
+    *   Reversible polyalphabetic cipher based on 10 virtual rotors.
+    *   Input text is converted to Base32 (A-Z, 2-7) before encryption.
+    *   Supports "Galactic Alphabet" for visual obfuscation.
+    *   **Shift Equations**:
+        *   *Super ENIGMA*: Complex combination of sums, products, and powers.
+        *   *Simple/Quadratic/Cubic Sum*: Basic mathematical operations on the rotor vector.
+        *   *Product*: Multiplication of rotor values.
+
+2.  **Base64**:
+    *   Standard Base64 encoding for interoperability.
+
+3.  **SHA-1**:
+    *   Generates a 160-bit hash (40 hex chars) of the input text.
+    *   *Note: One-way (cannot be decrypted).*
+
+4.  **SHA-256**:
+    *   Generates a 256-bit hash (64 hex chars). Modern security standard.
+    *   *Note: One-way.*
+
+5.  **Cascade (Base32 > SHA1 > SHA256)**:
+    *   Processing pipeline: Converts Text to Base32 -> SHA-1 Hash -> SHA-256 Hash.
+    *   Useful for digital signatures or proof-of-work.
+
+### Interface
+*   **Rotor Control**: 10 independent rotors with manual adjustment (0-25).
+*   **Automatic Rotation**: Simulates the odometer mechanism of the original Enigma, but with a dynamic twist:
+    *   *Internally*: Rotors advance based on the result of the chosen mathematical equation (variable step factor).
+    *   *Visually*: The interface remains at the initial position chosen by the user, facilitating key reuse.
+*   **Dark Mode Visual**: Modern and responsive interface.
+
+## How to Use
+
+1.  Clone the repository or download the files.
+2.  Open the `index.html` file in any modern browser.
+3.  Select the desired method (Enigma, SHA, etc).
+4.  Enter text in the "Input Text" field.
+5.  Click "Process/Encrypt".
+6.  To revert (Enigma and Base64 only), click "Decrypt" with the ciphertext in the input field.
+
+## Technical Details
+
+### File Structure
+*   `index.html`: Application structure.
+*   `css/style.css`: Styling (Dark Theme).
+*   `js/script.js`: Encryption, hashing, and UI control logic.
+
+### "Super Enigma" Logic
+The "Super Enigma" equation calculates rotor displacement by combining multiple operations to maximize displacement entropy at each step.
+
+```javascript
+Shift = ( (Sum * Prod) + (SumSq + SumCu) ) % Modulo
+```
+
+This ensures small patterns in the rotors do not result in linear patterns in the ciphertext.
+
+## Documentação Formal
+A documentação técnica completa e a análise matemática do sistema encontram-se disponíveis no arquivo [`docs/enigma.tex`](docs/enigma.tex), formatado para compilação em LaTeX.
+
+## Credits
+Developed as an educational and experimental cryptography tool.
+Based on historical concepts of the World War II Enigma Machine.
+
+---
+
 # Máquina Enigma Avançada
 
 Este projeto é uma releitura moderna e digital da clássica Máquina Enigma, expandindo seus conceitos com criptografia Base32, funções de deslocamento não-lineares e capacidades de hashing.
